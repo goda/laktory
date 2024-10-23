@@ -826,6 +826,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         return {
             "clusters": "job_clusters",
             "cluster": "job_cluster",
+            "on_failures": "on_failure",
         }
 
     @property
