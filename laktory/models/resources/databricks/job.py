@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from typing import Literal
 from typing import Union
 from pydantic import model_validator
@@ -81,9 +81,9 @@ class JobEmailNotifications(BaseModel):
 
     no_alert_for_skipped_runs: bool = None
     on_duration_warning_threshold_exceededs: list[str] = None
-    on_failures: list[str] = Field(alias="on_failure", init=False)
-    on_starts: list[str] = Field(alias="on_start", init=False)
-    on_success: list[str] = None
+    on_failures: Optional[list[str]] = Field(alias="on_failure", init=False, init_var=False)
+    on_starts: Optional[list[str]] = Field(alias="on_start", init=False, init_var=False)
+    on_success: Optional[list[str]] = None
 
     # @property
     # def terraform_renames(self) -> dict[str, str]:
