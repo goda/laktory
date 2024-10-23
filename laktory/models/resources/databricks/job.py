@@ -85,7 +85,13 @@ class JobEmailNotifications(BaseModel):
     on_starts: list[str] = None
     on_success: list[str] = None
 
-
+    @property
+    def terraform_renames(self) -> dict[str, str]:
+        return {
+            "on_failures": "on_failure",
+            "on_starts": "on_start"
+        }
+    
 class JobHealthRule(BaseModel):
     """
     Job Health Rule specifications
@@ -826,7 +832,6 @@ class Job(BaseModel, PulumiResource, TerraformResource):
         return {
             "clusters": "job_clusters",
             "cluster": "job_cluster",
-            "on_failures": "on_failure",
         }
 
     @property
