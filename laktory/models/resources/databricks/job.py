@@ -81,8 +81,8 @@ class JobEmailNotifications(BaseModel):
 
     no_alert_for_skipped_runs: bool = None
     on_duration_warning_threshold_exceededs: list[str] = None
-    on_failures: Optional[list[str]] = Field(alias="on_failure", init=False, init_var=False)
-    on_starts: Optional[list[str]] = Field(alias="on_start", init=False, init_var=False)
+    on_failures: Optional[list[str]] = Field(alias="on_failure", required=False, default=None)
+    on_starts: Optional[list[str]] = Field(alias="on_start", required=False, default=None)
     on_success: Optional[list[str]] = None
 
     # @property
