@@ -729,6 +729,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     clusters: list[JobCluster] = []
     continuous: JobContinuous = None
     control_run_state: bool = None
+    description: str = None
     email_notifications: JobEmailNotifications = None
     format: str = None
     health: JobHealth = None
