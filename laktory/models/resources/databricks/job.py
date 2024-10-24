@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from typing import Literal
 from typing import Union
-from pydantic import model_validator
+from pydantic import computed_field, model_validator
 from pydantic import Field
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
@@ -81,16 +81,9 @@ class JobEmailNotifications(BaseModel):
 
     no_alert_for_skipped_runs: bool = None
     on_duration_warning_threshold_exceededs: list[str] = None
-    on_failures: Optional[list[str]] = Field(alias="on_failure", required=False, default=None)
-    on_starts: Optional[list[str]] = Field(alias="on_start", required=False, default=None)
+    on_failure: Optional[list[str]] = Field(None, alias="on_failures")
+    on_start: Optional[list[str]] = Field(None, alias="on_starts")
     on_success: Optional[list[str]] = None
-
-    # @property
-    # def terraform_renames(self) -> dict[str, str]:
-    #     return {
-    #         "on_failures": "on_failure",
-    #         "on_starts": "on_start"
-    #     }
     
 class JobHealthRule(BaseModel):
     """
@@ -493,6 +486,11 @@ class JobTask(BaseModel):
     task_key: str = None
     timeout_seconds: int = None
 
+    @computed_field(alias='email_notifications', repr=False)
+    def email_notifications_with_alias(self) -> dict:
+        if self.use_alias:
+            return self.b.model_dump(by_alias=self.use_alias)
+        return self.b.model_dump()
 
 class JobTriggerFileArrival(BaseModel):
     """
@@ -730,7 +728,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     continuous: JobContinuous = None
     control_run_state: bool = None
     description: str = None
-    email_notifications: JobEmailNotifications = None
+    email_notifications: JobEmailNotifications = Field(None, exclude=True)
     format: str = None
     health: JobHealth = None
     lookup_existing: JobLookup = Field(None, exclude=True)
@@ -841,6 +839,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_properties(self) -> dict:
+        self.use_alias = False
         d = super().terraform_properties
 
         _clusters = []
@@ -857,3 +856,13 @@ class Job(BaseModel, PulumiResource, TerraformResource):
             d[k] = _clusters
 
         return d
+
+    use_alias: bool = True
+
+    @computed_field(alias='email_notifications', repr=False)
+    def email_notifications_with_alias(self) -> dict:
+        if self.email_notifications is None: 
+            return
+        if self.use_alias:
+            return self.email_notifications.model_dump(by_alias=True)
+        return self.email_notifications.model_dump()
