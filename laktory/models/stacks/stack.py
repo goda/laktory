@@ -406,7 +406,7 @@ class Stack(BaseModel):
                 # Get model dump
                 model = obj
                 if self.backend == "terraform":
-                    data = BaseModel.recursive_model_dump(by_alias = False, 
+                    data = BaseModel.recursive_model_dump(model, by_alias = False, 
                                                           exclude_unset=True)
                 else:
                     data = model.model_dump(exclude_unset=True)
