@@ -35,6 +35,27 @@ class BaseModel(_BaseModel):
     model_config = ConfigDict(extra="forbid")
     variables: dict[str, Any] = Field(default={}, exclude=True)
 
+    def recursive_model_dump(obj: Any, *args, **kwargs) -> dict:
+        if isinstance(obj, BaseModel):
+            data = obj.model_dump(*args, **kwargs)
+            for key, value in data.items():
+                # Recursively process each item, passing the original instance
+                if hasattr(obj, key):
+                    data[key] = BaseModel.recursive_model_dump(getattr(obj, key),*args, **kwargs)
+                else:
+                    data[key] = BaseModel.recursive_model_dump(value,*args, **kwargs)
+            # Apply conditional changes based on the class
+            if isinstance(obj, BaseModel):
+                data = obj.model_dump( *args, **kwargs)
+                # data = obj.model_dump(by_alias=terraform_backend,  *args, **kwargs)
+            return data
+        elif isinstance(obj, list):
+            return [BaseModel.recursive_model_dump(item,*args, **kwargs) for item in obj]
+        elif isinstance(obj, dict):
+            return {key: BaseModel.recursive_model_dump(value,*args, **kwargs) for key, value in obj.items()}
+        else:
+            return obj    
+
     @model_serializer(mode="wrap")
     def camel_serializer(self, handler) -> dict[str, Any]:
         dump = handler(self)

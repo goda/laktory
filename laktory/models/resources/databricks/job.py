@@ -465,7 +465,7 @@ class JobTask(BaseModel):
     condition_task: JobTaskConditionTask = None
     depends_ons: list[JobTaskDependsOn] = None
     description: str = None
-    email_notifications: JobEmailNotifications = Field(None, exclude=True)
+    email_notifications: JobEmailNotifications = None
     existing_cluster_id: str = None
     health: JobHealth = None
     job_cluster_key: str = None
@@ -485,12 +485,7 @@ class JobTask(BaseModel):
     sql_task: JobTaskSQLTask = None
     task_key: str = None
     timeout_seconds: int = None
-    use_alias: bool = True
 
-    @computed_field(alias='email_notifications', repr=False)
-    def email_notifications_with_alias(self) -> dict:
-        return (self.email_notifications.model_dump(by_alias=self.use_alias)
-                if self.email_notifications else None)
 
 class JobTriggerFileArrival(BaseModel):
     """
@@ -728,7 +723,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     continuous: JobContinuous = None
     control_run_state: bool = None
     description: str = None
-    email_notifications: JobEmailNotifications = Field(None, exclude=True)
+    email_notifications: JobEmailNotifications = None
     format: str = None
     health: JobHealth = None
     lookup_existing: JobLookup = Field(None, exclude=True)
@@ -747,7 +742,6 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     timeout_seconds: int = None
     trigger: JobTrigger = None
     webhook_notifications: JobWebhookNotifications = None
-    use_alias: bool = True
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -840,9 +834,6 @@ class Job(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def terraform_properties(self) -> dict:
-        self.use_alias = False
-        for t in self.tasks:
-            t.use_alias = False
         d = super().terraform_properties
 
         _clusters = []
@@ -859,8 +850,3 @@ class Job(BaseModel, PulumiResource, TerraformResource):
             d[k] = _clusters
 
         return d
-
-    @computed_field(alias='email_notifications', repr=False)
-    def email_notifications_with_alias(self) -> dict:
-        return (self.email_notifications.model_dump(by_alias=self.use_alias)
-                if self.email_notifications else None)
