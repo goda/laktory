@@ -489,11 +489,8 @@ class JobTask(BaseModel):
 
     @computed_field(alias='email_notifications', repr=False)
     def email_notifications_with_alias(self) -> dict:
-        if self.email_notifications is None:
-            return None
-        if self.use_alias:
-            return self.email_notifications.model_dump(by_alias=self.use_alias)
-        return self.email_notifications.model_dump()
+        return (self.email_notifications.model_dump(by_alias=self.use_alias)
+                if self.email_notifications else None)
 
 class JobTriggerFileArrival(BaseModel):
     """
