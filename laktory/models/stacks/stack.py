@@ -409,7 +409,7 @@ class Stack(BaseModel):
                     data = BaseModel.recursive_model_dump(model, by_alias = False, 
                                                           exclude_unset=True)
                 else:
-                    data = model.model_dump(exclude_unset=True)
+                    data = model.model_dump(by_alias = True, exclude_unset=True)
 
                 # Loop through all model fields
                 for field_name, field in model.model_fields.items():
