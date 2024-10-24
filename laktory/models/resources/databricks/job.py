@@ -485,12 +485,13 @@ class JobTask(BaseModel):
     sql_task: JobTaskSQLTask = None
     task_key: str = None
     timeout_seconds: int = None
+    use_alias: bool = True
 
     @computed_field(alias='email_notifications', repr=False)
     def email_notifications_with_alias(self) -> dict:
         if self.use_alias:
-            return self.b.model_dump(by_alias=self.use_alias)
-        return self.b.model_dump()
+            return self.email_notifications.model_dump(by_alias=self.use_alias)
+        return self.email_notifications.model_dump()
 
 class JobTriggerFileArrival(BaseModel):
     """
@@ -840,6 +841,8 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     @property
     def terraform_properties(self) -> dict:
         self.use_alias = False
+        for t in self.tasks:
+            t.use_alias = False
         d = super().terraform_properties
 
         _clusters = []
