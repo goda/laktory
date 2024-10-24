@@ -465,7 +465,7 @@ class JobTask(BaseModel):
     condition_task: JobTaskConditionTask = None
     depends_ons: list[JobTaskDependsOn] = None
     description: str = None
-    email_notifications: JobEmailNotifications = None
+    email_notifications: JobEmailNotifications = Field(None, exclude=True)
     existing_cluster_id: str = None
     health: JobHealth = None
     job_cluster_key: str = None
@@ -747,6 +747,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     timeout_seconds: int = None
     trigger: JobTrigger = None
     webhook_notifications: JobWebhookNotifications = None
+    use_alias: bool = True
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -859,12 +860,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
 
         return d
 
-    use_alias: bool = True
-
     @computed_field(alias='email_notifications', repr=False)
     def email_notifications_with_alias(self) -> dict:
-        if self.email_notifications is None: 
-            return
-        if self.use_alias:
-            return self.email_notifications.model_dump(by_alias=True)
-        return self.email_notifications.model_dump()
+        return (self.email_notifications.model_dump(by_alias=self.use_alias)
+                if self.email_notifications else None)
