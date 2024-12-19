@@ -424,6 +424,7 @@ class JobTaskSQLTask(BaseModel):
     warehouse_id: str
 
 
+
 class JobTask(BaseModel):
     """
     Job Task specifications
@@ -502,6 +503,35 @@ class JobTask(BaseModel):
     def sort_depends_ons(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
         return sorted(v, key=lambda task: task.task_key)
 
+
+class JobTaskLoopDetails(BaseModel):
+    inputs: str
+    task: JobTask   
+    
+class JobTaskLoop(JobTask):
+    """
+    Job Task Loop specifications
+
+    Attributes
+    ----------
+    depends_ons:
+        Depends On specifications
+    email_notifications:
+        Email Notifications specifications
+    notification_settings:
+        Notification Settings specifications
+    run_if:
+        An optional value indicating the condition that determines whether the task should be run once its dependencies
+        have been completed. When omitted, defaults to `ALL_SUCCESS`.
+    task_key:
+        A unique key for a given task.
+    """
+    for_each_task: JobTaskLoopDetails
+    depends_ons: list[JobTaskDependsOn] = None
+    email_notifications: JobEmailNotifications = None
+    notification_settings: JobNotificationSettings = None
+    run_if: str = None
+    task_key: str = None
 
 class JobTriggerFileArrival(BaseModel):
     """
@@ -773,7 +803,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     run_as: JobRunAs = None
     schedule: JobSchedule = None
     tags: dict[str, Any] = {}
-    tasks: list[JobTask] = []
+    tasks: list[Union(JobTask, JobTaskLoop)] = []
     timeout_seconds: int = None
     trigger: JobTrigger = None
     webhook_notifications: JobWebhookNotifications = None
