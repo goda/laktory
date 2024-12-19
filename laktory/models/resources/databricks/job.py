@@ -503,18 +503,13 @@ class JobTaskBaseModel(BaseModel):
         return sorted(v, key=lambda task: task.task_key)
     
 
-class JobTaskForEach(JobTaskBaseModel):
-    inputs: str = None ##
+class JobForEachTask(JobTaskBaseModel):
+    inputs: str = None
     task: JobTaskBaseModel
 
-class JobTaskFor(JobTaskBaseModel):
-    # 
-    for_each_task: JobTaskForEach = None
-
 class JobTask(JobTaskBaseModel):
-    pass
-    # # 
-    # for_each_task: JobTaskForEach = None
+    # 
+    for_each_task: JobForEachTask = None
     
 
 class JobTriggerFileArrival(BaseModel):
@@ -787,15 +782,15 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     run_as: JobRunAs = None
     schedule: JobSchedule = None
     tags: dict[str, Any] = {}
-    tasks: list[Union[JobTask, JobTaskFor]] = []
-    # tasks: list[JobTask] = []
+    # tasks: list[Union[JobTask, JobTaskLoop]] = []
+    tasks: list[JobTask] = []
     timeout_seconds: int = None
     trigger: JobTrigger = None
     webhook_notifications: JobWebhookNotifications = None
 
     @field_validator("tasks")
     @classmethod
-    def sort_tasks(cls, v: list[Union[JobTask, JobTaskFor]]) -> list[Union[JobTask, JobTaskFor]]:
+    def sort_tasks(cls, v: list[JobTask]) -> list[JobTask]:
         return sorted(v, key=lambda task: task.task_key)
 
     @model_validator(mode="after")
