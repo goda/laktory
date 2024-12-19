@@ -508,7 +508,7 @@ class JobTaskLoopDetails(BaseModel):
     inputs: str
     task: JobTask   
     
-class JobTaskLoop(JobTask):
+class JobTaskLoop(BaseModel):
     """
     Job Task Loop specifications
 
