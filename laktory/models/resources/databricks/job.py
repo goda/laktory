@@ -803,7 +803,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     run_as: JobRunAs = None
     schedule: JobSchedule = None
     tags: dict[str, Any] = {}
-    tasks: list[Union(JobTask, JobTaskLoop)] = []
+    tasks: list[Union[JobTask, JobTaskLoop]] = []
     timeout_seconds: int = None
     trigger: JobTrigger = None
     webhook_notifications: JobWebhookNotifications = None
