@@ -111,9 +111,47 @@ def test_job_model():
         "tags": {},
         "tasks": [
             {
+                "condition_task": None,
+                "depends_ons": None,
+                "description": None,
+                "email_notifications": None,
+                "existing_cluster_id": None,
+                "health": None,
+                "job_cluster_key": "main",
+                "libraries": None,
+                "max_retries": None,
+                "min_retry_interval_millis": None,
+                "notebook_task": None,
+                "notification_settings": None,
+                "pipeline_task": None,
+                "retry_on_timeout": None,
+                "run_if": None,
+                "run_job_task": None,
+                "sql_task": None,
+                "task_key": "for_loop_task",
+                "timeout_seconds": None,                
                 "for_each_task": {
                     "inputs": "[1,2,3]",
                     "task":{
+                        "condition_task": None,
+                        "depends_ons": None,
+                        "description": None,
+                        "email_notifications": None,
+                        "existing_cluster_id": None,
+                        "health": None,
+                        "job_cluster_key": "main",
+                        "libraries": None,
+                        "max_retries": None,
+                        "min_retry_interval_millis": None,
+                        "notebook_task": None,
+                        "notification_settings": None,
+                        "pipeline_task": None,
+                        "retry_on_timeout": None,
+                        "run_if": None,
+                        "run_job_task": None,
+                        "sql_task": None,
+                        "task_key": "ingestion",
+                        "timeout_seconds": None,                             
                         "notebook_task": {
                             "notebook_path": "job/ingest_stock_prices",
                             "base_parameters": None,
@@ -148,6 +186,7 @@ def test_job_model():
                 "sql_task": None,
                 "task_key": "ingestion",
                 "timeout_seconds": None,
+                "for_each_task": None
             },
             {
                 "condition_task": None,
@@ -172,6 +211,7 @@ def test_job_model():
                 "sql_task": None,
                 "task_key": "pipeline",
                 "timeout_seconds": None,
+                "for_each_task": None
             },
             {
                 "condition_task": None,
@@ -200,6 +240,7 @@ def test_job_model():
                 },
                 "task_key": "view",
                 "timeout_seconds": None,
+                "for_each_task": None
             },
         ],
         "timeout_seconds": None,

@@ -503,7 +503,7 @@ class JobTaskBaseModel(BaseModel):
         return sorted(v, key=lambda task: task.task_key)
     
 
-class JobForEachTask(JobTaskBaseModel):
+class JobForEachTask(BaseModel):
     inputs: str = None
     task: JobTaskBaseModel
 
