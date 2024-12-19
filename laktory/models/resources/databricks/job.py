@@ -425,7 +425,43 @@ class JobTaskSQLTask(BaseModel):
 
 
 
-class JobTask(BaseModel):
+class JobTaskBaseModel(BaseModel):
+# compute_key: str = None
+    condition_task: JobTaskConditionTask = None
+    depends_ons: list[JobTaskDependsOn] = None
+    description: str = None
+    email_notifications: JobEmailNotifications = None
+    existing_cluster_id: str = None
+    health: JobHealth = None
+    job_cluster_key: str = None
+    libraries: list[ClusterLibrary] = None
+    max_retries: int = None
+    min_retry_interval_millis: int = None
+    # new_cluster: Cluster = None
+    notebook_task: JobTaskNotebookTask = None
+    notification_settings: JobNotificationSettings = None
+    pipeline_task: JobTaskPipelineTask = None
+    # python_wheel_task:
+    retry_on_timeout: bool = None
+    run_if: str = None
+    run_job_task: JobTaskRunJobTask = None
+    # spark_jar_task:
+    # spark_python_task:
+    sql_task: JobTaskSQLTask = None
+    task_key: str = None
+    timeout_seconds: int = None
+
+    @field_validator("depends_ons")
+    @classmethod
+    def sort_depends_ons(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
+        return sorted(v, key=lambda task: task.task_key)
+    
+
+class JobTaskLoopDetails(JobTaskBaseModel):
+    inputs: str = None ##
+    task: JobTaskBaseModel
+    
+class JobTask(JobTaskBaseModel):
     """
     Job Task specifications
 
@@ -472,42 +508,10 @@ class JobTask(BaseModel):
     timeout_seconds:
         An optional timeout applied to each run of this job. The default behavior is to have no timeout.
     """
-
-    # compute_key: str = None
-    condition_task: JobTaskConditionTask = None
-    depends_ons: list[JobTaskDependsOn] = None
-    description: str = None
-    email_notifications: JobEmailNotifications = None
-    existing_cluster_id: str = None
-    health: JobHealth = None
-    job_cluster_key: str = None
-    libraries: list[ClusterLibrary] = None
-    max_retries: int = None
-    min_retry_interval_millis: int = None
-    # new_cluster: Cluster = None
-    notebook_task: JobTaskNotebookTask = None
-    notification_settings: JobNotificationSettings = None
-    pipeline_task: JobTaskPipelineTask = None
-    # python_wheel_task:
-    retry_on_timeout: bool = None
-    run_if: str = None
-    run_job_task: JobTaskRunJobTask = None
-    # spark_jar_task:
-    # spark_python_task:
-    sql_task: JobTaskSQLTask = None
-    task_key: str = None
-    timeout_seconds: int = None
-
-    @field_validator("depends_ons")
-    @classmethod
-    def sort_depends_ons(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
-        return sorted(v, key=lambda task: task.task_key)
-
-
-class JobTaskLoopDetails(BaseModel):
-    inputs: str
-    task: JobTask   
+    for_each_task: JobTaskLoopDetails = None ##
     
+
+
 class JobTaskLoop(BaseModel):
     """
     Job Task Loop specifications
@@ -789,9 +793,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     email_notifications: JobEmailNotifications = None
     format: str = None
     health: JobHealth = None
-    inputs: str = None ##
     lookup_existing: JobLookup = Field(None, exclude=True)
-    for_each_task: JobTaskLoopDetails = None ##
     max_concurrent_runs: int = None
     max_retries: int = None
     min_retry_interval_millis: int = None

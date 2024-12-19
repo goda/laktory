@@ -13,6 +13,17 @@ job = Job(
     ],
     tasks=[
         {
+            "task_key": "for_loop_task",
+            "for_each_task": {
+                "inputs": "[1,2,3]",
+                "task":
+                {
+                    "pipeline_task": {"pipeline_id": "${resources.pl-spark-dlt.id}"},
+                    "task_key": "pipeline",
+                }
+            }
+        },        
+        {
             "depends_ons": [{"task_key": "ingestion"}],
             "pipeline_task": {"pipeline_id": "${resources.pl-spark-dlt.id}"},
             "task_key": "pipeline",
@@ -99,6 +110,19 @@ def test_job_model():
         "schedule": None,
         "tags": {},
         "tasks": [
+            {
+                "for_each_task": {
+                    "inputs": "[1,2,3]",
+                    "task":{
+                        "notebook_task": {
+                            "notebook_path": "job/ingest_stock_prices",
+                            "base_parameters": None,
+                            "warehouse_id": None,
+                            "source": None,
+                        }
+                    }
+                }
+            },
             {
                 "condition_task": None,
                 "depends_ons": None,
