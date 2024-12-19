@@ -789,7 +789,9 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     email_notifications: JobEmailNotifications = None
     format: str = None
     health: JobHealth = None
+    # inputs: str = None ##
     lookup_existing: JobLookup = Field(None, exclude=True)
+    # for_each_task: JobTaskLoopDetails = None ##
     max_concurrent_runs: int = None
     max_retries: int = None
     min_retry_interval_millis: int = None
@@ -810,7 +812,7 @@ class Job(BaseModel, PulumiResource, TerraformResource):
 
     @field_validator("tasks")
     @classmethod
-    def sort_tasks(cls, v: list[JobTask]) -> list[JobTask]:
+    def sort_tasks(cls, v: list[Union[JobTask, JobTaskLoop]]) -> list[Union[JobTask, JobTaskLoop]]:
         return sorted(v, key=lambda task: task.task_key)
 
     @model_validator(mode="after")
