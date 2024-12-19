@@ -426,42 +426,6 @@ class JobTaskSQLTask(BaseModel):
 
 
 class JobTaskBaseModel(BaseModel):
-# compute_key: str = None
-    condition_task: JobTaskConditionTask = None
-    depends_ons: list[JobTaskDependsOn] = None
-    description: str = None
-    email_notifications: JobEmailNotifications = None
-    existing_cluster_id: str = None
-    health: JobHealth = None
-    job_cluster_key: str = None
-    libraries: list[ClusterLibrary] = None
-    max_retries: int = None
-    min_retry_interval_millis: int = None
-    # new_cluster: Cluster = None
-    notebook_task: JobTaskNotebookTask = None
-    notification_settings: JobNotificationSettings = None
-    pipeline_task: JobTaskPipelineTask = None
-    # python_wheel_task:
-    retry_on_timeout: bool = None
-    run_if: str = None
-    run_job_task: JobTaskRunJobTask = None
-    # spark_jar_task:
-    # spark_python_task:
-    sql_task: JobTaskSQLTask = None
-    task_key: str = None
-    timeout_seconds: int = None
-
-    @field_validator("depends_ons")
-    @classmethod
-    def sort_depends_ons(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
-        return sorted(v, key=lambda task: task.task_key)
-    
-
-class JobTaskLoopDetails(JobTaskBaseModel):
-    inputs: str = None ##
-    task: JobTaskBaseModel
-    
-class JobTask(JobTaskBaseModel):
     """
     Job Task specifications
 
@@ -507,35 +471,51 @@ class JobTask(JobTaskBaseModel):
         A unique key for a given task.
     timeout_seconds:
         An optional timeout applied to each run of this job. The default behavior is to have no timeout.
-    """
-    for_each_task: JobTaskLoopDetails = None ##
+    """    
+    # compute_key: str = None
+    condition_task: JobTaskConditionTask = None
+    depends_ons: list[JobTaskDependsOn] = None
+    description: str = None
+    email_notifications: JobEmailNotifications = None
+    existing_cluster_id: str = None
+    health: JobHealth = None
+    job_cluster_key: str = None
+    libraries: list[ClusterLibrary] = None
+    max_retries: int = None
+    min_retry_interval_millis: int = None
+    # new_cluster: Cluster = None
+    notebook_task: JobTaskNotebookTask = None
+    notification_settings: JobNotificationSettings = None
+    pipeline_task: JobTaskPipelineTask = None
+    # python_wheel_task:
+    retry_on_timeout: bool = None
+    run_if: str = None
+    run_job_task: JobTaskRunJobTask = None
+    # spark_jar_task:
+    # spark_python_task:
+    sql_task: JobTaskSQLTask = None
+    task_key: str = None
+    timeout_seconds: int = None
+
+    @field_validator("depends_ons")
+    @classmethod
+    def sort_depends_ons(cls, v: list[JobTaskDependsOn]) -> list[JobTaskDependsOn]:
+        return sorted(v, key=lambda task: task.task_key)
     
 
+class JobTaskForEach(JobTaskBaseModel):
+    inputs: str = None ##
+    task: JobTaskBaseModel
 
-class JobTaskLoop(BaseModel):
-    """
-    Job Task Loop specifications
+class JobTaskFor(JobTaskBaseModel):
+    # 
+    for_each_task: JobTaskForEach = None
 
-    Attributes
-    ----------
-    depends_ons:
-        Depends On specifications
-    email_notifications:
-        Email Notifications specifications
-    notification_settings:
-        Notification Settings specifications
-    run_if:
-        An optional value indicating the condition that determines whether the task should be run once its dependencies
-        have been completed. When omitted, defaults to `ALL_SUCCESS`.
-    task_key:
-        A unique key for a given task.
-    """
-    for_each_task: JobTaskLoopDetails
-    depends_ons: list[JobTaskDependsOn] = None
-    email_notifications: JobEmailNotifications = None
-    notification_settings: JobNotificationSettings = None
-    run_if: str = None
-    task_key: str = None
+class JobTask(JobTaskBaseModel):
+    pass
+    # # 
+    # for_each_task: JobTaskForEach = None
+    
 
 class JobTriggerFileArrival(BaseModel):
     """
@@ -807,15 +787,15 @@ class Job(BaseModel, PulumiResource, TerraformResource):
     run_as: JobRunAs = None
     schedule: JobSchedule = None
     tags: dict[str, Any] = {}
-    # tasks: list[Union[JobTask, JobTaskLoop]] = []
-    tasks: list[JobTask] = []
+    tasks: list[Union[JobTask, JobTaskFor]] = []
+    # tasks: list[JobTask] = []
     timeout_seconds: int = None
     trigger: JobTrigger = None
     webhook_notifications: JobWebhookNotifications = None
 
     @field_validator("tasks")
     @classmethod
-    def sort_tasks(cls, v: list[JobTask]) -> list[JobTask]:
+    def sort_tasks(cls, v: list[Union[JobTask, JobTaskFor]]) -> list[Union[JobTask, JobTaskFor]]:
         return sorted(v, key=lambda task: task.task_key)
 
     @model_validator(mode="after")
