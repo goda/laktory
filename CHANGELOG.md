@@ -5,6 +5,7 @@
 * `drop_duplicates` option for data sources
 * Ability to specify `storage_root` for a `schema` resource
 * Ability to assign service principal and user workspace permissions similar to groups
+* Allow for grants or grant attribute to be specified, depending if one wants to manage all of the objects permissions or just for the one principal on that object  
 ### Fixed
 * Usage of `lookup_existing` preventing propagation of resource `options` [[#372](https://github.com/okube-ai/laktory/issues/372)]
 * Typo in unity catalog quick start documentation 
