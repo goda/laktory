@@ -3,10 +3,15 @@
 ## [0.6.6] - Unreleased
 ### Added
 * `drop_duplicates` option for data sources
+* Ability to specify `storage_root` for a `schema` resource
+* Ability to assign service principal workspace permissions similar to groups
+* Allow for grants or grant attribute to be specified, depending if one wants to manage all of the objects permissions or just for the one principal on that object  
 ### Fixed
 * Usage of `lookup_existing` preventing propagation of resource `options` [[#372](https://github.com/okube-ai/laktory/issues/372)]
 * Typo in unity catalog quick start documentation 
 * Missing documentation for `data_accesses` `metastore` attribute 
+* Fix for variable resolution in `lookup_existing` attribute
+* Fix for `metastore` when being looked up
 ### Updated
 * Databricks `group` resource properties
 * Databricks `user` resource properties
