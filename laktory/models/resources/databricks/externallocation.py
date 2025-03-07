@@ -164,9 +164,9 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Schema grants
-        if self.grants:
-            resources += [
-                Grants(
+        if self.grants or self.grant:
+            if self.grants:
+                resources += Grants(
                     resource_name=f"grants-{self.resource_name}",
                     external_location=f"${{resources.{self.resource_name}.name}}",
                     grants=[
