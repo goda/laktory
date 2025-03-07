@@ -122,7 +122,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
             if self.grants:
                 resources += Grants(
                     resource_name=f"grants-{self.resource_name}",
-                    metastore=f"${{resources.{self.resource_name}.id}}",
+                    schema=self.full_name,
                     grants=[
                         {"principal": g.principal, "privileges": g.privileges}
                         for g in self.grants
@@ -132,7 +132,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
                 # if grant is provided, use it instead of grants (for principal specific grants)
                 resources += Grants(
                     resource_name=f"grants-{self.resource_name}",
-                    metastore=f"${{resources.{self.resource_name}.id}}",
+                    schema=self.full_name,
                     principal=self.grant.principal,
                     privileges=self.grant.privileges,
                 ).core_resources
