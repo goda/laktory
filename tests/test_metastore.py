@@ -61,6 +61,7 @@ def test_metastore():
                 "force_destroy": True,
                 "force_update": None,
                 "gcp_service_account_key": None,
+                "grant": None,
                 "grants": [
                     {
                         "principal": "role-metastore-admins",
@@ -81,6 +82,7 @@ def test_metastore():
         "delta_sharing_scope": None,
         "force_destroy": True,
         "global_metastore_id": None,
+        "grant": None,
         "grants": [
             {
                 "principal": "role-metastore-admins",
