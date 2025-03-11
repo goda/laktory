@@ -1,3 +1,4 @@
+from pydantic import Field
 from laktory.models.resources.providers.baseprovider import BaseProvider
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
@@ -127,6 +128,11 @@ class AzureProvider(BaseProvider, PulumiResource, TerraformResource):
     use_cli: bool = None
     use_msi: bool = None
     use_oidc: bool = None
+
+    source: str = Field("hashicorp/azurerm", exclude=True)
+    version: str = Field(
+        ">=4.22.0", exclude=True
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
