@@ -10,6 +10,7 @@ from laktory._parsers import merge_dicts
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipeline import Pipeline
+from laktory.models.resources.azure.azurecontainer import AzureStorageContainer
 from laktory.models.resources.baseresource import ResourceOptions
 from laktory.models.resources.databricks.alert import Alert
 from laktory.models.resources.databricks.catalog import Catalog
@@ -188,6 +189,7 @@ class StackResources(BaseModel):
     providers:
         Providers
     """
+    azure_storagecontainers: dict[str, AzureStorageContainer] = {}
 
     databricks_alerts: dict[str, Alert] = {}
     databricks_catalogs: dict[str, Catalog] = {}
