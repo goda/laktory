@@ -128,7 +128,7 @@ class AzureProvider(BaseProvider, PulumiResource, TerraformResource):
     use_cli: bool = None
     use_msi: bool = None
     use_oidc: bool = None
-    features: dict = Field(default_factory=dict)
+    features: dict[str, str] = None
 
     source: str = Field("hashicorp/azurerm", exclude=True)
     version: str = Field(
