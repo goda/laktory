@@ -19,9 +19,11 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 class AzureStorageContainer(BaseModel, PulumiResource, TerraformResource):
     name: str             
-    storage_account_name: str
+    storage_account_id: str
+    default_encryption_scope: str = None 
+    encryption_scope_override_enabled: str = None
     container_access_type: Literal["blob", "container", "private"] = "private"
-
+    metadata: dict[str, str] = None
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #
