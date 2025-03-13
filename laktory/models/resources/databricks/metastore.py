@@ -123,7 +123,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         individual_grants = data.get("individual_grants", None)
         if grants and individual_grants:
             raise ValueError("Both `grants` and `individual_grants` cannot be set at the same time.")
-        return data
+        return cls
     
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
