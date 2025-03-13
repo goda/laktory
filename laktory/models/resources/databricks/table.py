@@ -199,7 +199,7 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         """
         resources = []
 
-        # Schema grants
+        # Table grants
         if self.grants:
             resources += Grants(
                 resource_name=f"grants-{self.resource_name}",

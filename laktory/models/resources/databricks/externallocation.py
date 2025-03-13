@@ -166,25 +166,24 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         """
         resources = []
 
-        # Schema grants
-        if self.grants or self.grant:
-            if self.grants:
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    external_location=f"${{resources.{self.resource_name}.name}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                ).core_resources
-            else:
-                # if grant is provided, use it instead of grants (for principal specific grants)
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    external_location=self.name,
-                    principal=self.grant.principal,
-                    privileges=self.grant.privileges,
-                ).core_resources
+        # External location grants
+        if self.grants:
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
+                external_location=f"${{resources.{self.resource_name}.name}}",
+                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
+            ).core_resources
+
+        if self.individual_grants:
+            for g in self.individual_grants:
+                for idx, g in enumerate(self.individual_grants):
+                    principal = str(idx) if re.match(r"\$\{resources\.(.*?)\}", g.principal) else g.principal
+                    resources += GrantsIndividual(
+                        resource_name=f"grant-{self.resource_name}-{principal}",
+                        external_location=f"${{resources.{self.resource_name}.name}}",
+                        principal=g.principal,
+                        privileges=g.privileges,
+                    ).core_resources
 
         return resources
 
