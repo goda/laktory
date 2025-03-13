@@ -1,10 +1,11 @@
+import re
 from typing import Union
 
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.schemagrant import SchemaGrant
-from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.volume import Volume
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -26,6 +27,9 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         If `True` catalog can be deleted, even when not empty
     grants:
         List of grants operating on the schema
+    individual_grants:
+        List of grants operating on the schema. Different from `grants` in that
+        it does not remove grants for other principals not specified in the list.             
     isolation_mode:
         Whether the catalog is accessible from all workspaces or a specific set
         of workspaces. Can be ISOLATED or OPEN. Setting the catalog to ISOLATED
@@ -65,6 +69,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = True
     grant: SchemaGrant = None
     grants: list[SchemaGrant] = None
+    individual_grants: list[SchemaGrant] = None
     name: str
     storage_root: str = None
     tables: list[Table] = []
@@ -118,19 +123,24 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Schema grants
-        if self.grants or self.grant:
-            if self.grants:
-                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
-            elif self.grant:
-                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
-            else:
-                grant_config = {}
-
+        if self.grants:
             resources += Grants(
-                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
+                resource_name=f"grants-{self.resource_name}",
                 schema=f"${{resources.{self.resource_name}.id}}",
-                **grant_config
+                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
             ).core_resources
+
+            depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
+        if self.individual_grants:
+            for g in self.individual_grants:
+                for idx, g in enumerate(self.individual_grants):
+                    principal = str(idx) if re.match(r"\$\{resources\.(.*?)\}", g.principal) else g.principal
+                    resources += GrantsIndividual(
+                        resource_name=f"grant-{self.resource_name}-{principal}",
+                        schema=f"${{resources.{self.resource_name}.id}}",
+                        principal=g.principal,
+                        privileges=g.privileges,
+                    ).core_resources
 
         if self.volumes:
             for v in self.volumes:

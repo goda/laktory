@@ -61,6 +61,9 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
         List of grants operating on the metastore
     grants_provider:
         Provider used for deploying grants
+    individual_grants:
+        List of grants operating on the catalog. Different from `grants` in that
+        it does not remove grants for other principals not specified in the list.         
     lookup_existing:
         Specifications for looking up existing resource. Other attributes will
         be ignored.
@@ -103,8 +106,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     force_destroy: bool = None
     global_metastore_id: str = None
     grants: list[MetastoreGrant] = None
-    individual_grants: list[MetastoreGrant] = None
     grants_provider: str = None
+    individual_grants: list[MetastoreGrant] = None
     lookup_existing: MetastoreLookup = Field(None, exclude=True)
     metastore_id: str = None
     name: str = None
@@ -151,13 +154,11 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
             options["depends_on"] = depends_on
 
         if self.grants:
-            grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
-
             resources += Grants(
                 resource_name=f"grants-{self.resource_name}",
                 metastore=f"${{resources.{self.resource_name}.id}}",
                 options=options,
-                **grant_config
+                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
             ).core_resources
 
             depends_on += [f"${{resources.{resources[-1].resource_name}}}"]

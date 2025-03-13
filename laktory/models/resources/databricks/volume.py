@@ -1,9 +1,10 @@
+import re
 from typing import Literal
 from typing import Union
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.volumegrant import VolumeGrant
-from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -23,16 +24,19 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
         Name of the volume
     catalog_name:
         Name of the catalog storing the volume
+    grants:
+        List of grants operating on the volume
+    individual_grants:
+        List of grants operating on the catalog. Different from `grants` in that
+        it does not remove grants for other principals not specified in the list.         
     schema_name:
         Name of the schema storing the volume
+    storage_location:
+        Path inside an External Location. Only used for EXTERNAL Volumes.
     volume_type:
         Type of volume. A managed volume is a Unity Catalog-governed storage volume created within the default storage
         location of the containing schema. An external volume is a Unity Catalog-governed storage volume registered
         against a directory within an external location.
-    storage_location:
-        Path inside an External Location. Only used for EXTERNAL Volumes.
-    grants:
-        List of grants operating on the volume
 
     Examples
     --------
@@ -65,11 +69,11 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
 
     name: str
     catalog_name: str = None
-    schema_name: str = None
-    volume_type: Literal["MANAGED", "EXTERNAL"] = "MANAGED"
-    storage_location: str = None
-    grant: VolumeGrant = None
     grants: list[VolumeGrant] = None
+    individual_grants: list[VolumeGrant] = None
+    schema_name: str = None
+    storage_location: str = None
+    volume_type: Literal["MANAGED", "EXTERNAL"] = "MANAGED"
 
     # ----------------------------------------------------------------------- #
     # Computed fields                                                         #
@@ -115,19 +119,24 @@ class Volume(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Volume grants
-        if self.grants or self.grant:
-            if self.grants:
-                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
-            elif self.grant:
-                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
-            else:
-                grant_config = {}
-
+        if self.grants:
             resources += Grants(
-                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
+                resource_name=f"grants-{self.resource_name}",
                 volume=f"${{resources.{self.resource_name}.id}}",
-                **grant_config
+                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
             ).core_resources
+
+            depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
+        if self.individual_grants:
+            for g in self.individual_grants:
+                for idx, g in enumerate(self.individual_grants):
+                    principal = str(idx) if re.match(r"\$\{resources\.(.*?)\}", g.principal) else g.principal
+                    resources += GrantsIndividual(
+                        resource_name=f"grant-{self.resource_name}-{principal}",
+                        volume=f"${{resources.{self.resource_name}.id}}",
+                        principal=g.principal,
+                        privileges=g.privileges,
+                    ).core_resources
 
         return resources
 

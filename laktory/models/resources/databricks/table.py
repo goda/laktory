@@ -1,3 +1,4 @@
+import re
 from typing import Literal
 from typing import Union
 
@@ -7,7 +8,7 @@ from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -74,6 +75,9 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         MANAGED tables or VIEW.
     grants:
         List of grants operating on the schema
+    individual_grants:
+        List of grants operating on the table. Different from `grants` in that
+        it does not remove grants for other principals not specified in the list.             
     lookup_existing:
         Specifications for looking up existing resource. Other attributes will
         be ignored.
@@ -118,8 +122,8 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     columns: Union[list[TableColumn], None] = None
     comment: Union[str, None] = None
     data_source_format: str = "DELTA"
-    grant: TableGrant = None
     grants: list[TableGrant] = None
+    individual_grants: list[TableGrant] = None    
     lookup_existing: TableLookup = Field(None, exclude=True)
     name: str
     properties: Union[dict[str, str], None] = None
@@ -196,24 +200,24 @@ class Table(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # Schema grants
-        if self.grants or self.grant:
-            if self.grants:
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    table=f"${{resources.{self.resource_name}.id}}",
-                    grants=[
-                        {"principal": g.principal, "privileges": g.privileges}
-                        for g in self.grants
-                    ],
-                ).core_resources
-            else:
-                grant_config = {}
-
+        if self.grants:
             resources += Grants(
-                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
+                resource_name=f"grants-{self.resource_name}",
                 table=f"${{resources.{self.resource_name}.id}}",
-                **grant_config
+                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
             ).core_resources
+
+            depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
+        if self.individual_grants:
+            for g in self.individual_grants:
+                for idx, g in enumerate(self.individual_grants):
+                    principal = str(idx) if re.match(r"\$\{resources\.(.*?)\}", g.principal) else g.principal
+                    resources += GrantsIndividual(
+                        resource_name=f"grant-{self.resource_name}-{principal}",
+                        table=f"${{resources.{self.resource_name}.id}}",
+                        principal=g.principal,
+                        privileges=g.privileges,
+                    ).core_resources
         return resources
 
     # ----------------------------------------------------------------------- #

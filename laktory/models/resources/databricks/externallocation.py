@@ -1,7 +1,8 @@
+import re
 from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
-from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.pulumiresource import PulumiResource
 from laktory.models.resources.terraformresource import TerraformResource
 
@@ -49,6 +50,9 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         Update external location regardless of its dependents.
     grants:
         List of grants operating on the external location.        
+    individual_grants:
+        List of grants operating on the external location. Different from `grants` in that
+        it does not remove grants for other principals not specified in the list.             
     metastore_id:
         Metastore ID
     name:
@@ -76,8 +80,8 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
     encryption_details: ExternalLocationEncryptionDetails = None
     force_destroy: bool = None
     force_update: bool = None
-    grant: ExternalLocationGrant = None
     grants: list[ExternalLocationGrant] = None
+    individual_grants: list[ExternalLocationGrant] = None
     metastore_id: str = None
     name: str = None
     owner: str = None
@@ -96,19 +100,24 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         resources = []
 
         # External Location Grants
-        if self.grants or self.grant:
-            if self.grants:
-                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
-            elif self.grant:
-                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
-            else:
-                # if grant is provided, use it instead of grants (for principal specific grants)
-                resources += Grants(
-                    resource_name=f"grants-{self.resource_name}",
-                    external_location=f"${{resources.{self.resource_name}.name}}",
-                    principal=self.grant.principal,
-                    privileges=self.grant.privileges,
-                ).core_resources
+        if self.grants:
+            resources += Grants(
+                resource_name=f"grants-{self.resource_name}",
+                storage_credential=f"${{resources.{self.resource_name}.name}}",
+                grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
+            ).core_resources
+
+            depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
+        if self.individual_grants:
+            for g in self.individual_grants:
+                for idx, g in enumerate(self.individual_grants):
+                    principal = str(idx) if re.match(r"\$\{resources\.(.*?)\}", g.principal) else g.principal
+                    resources += GrantsIndividual(
+                        resource_name=f"grant-{self.resource_name}-{principal}",
+                        storage_credential=f"${{resources.{self.resource_name}.name}}",
+                        principal=g.principal,
+                        privileges=g.privileges,
+                    ).core_resources  
 
         return resources
 
