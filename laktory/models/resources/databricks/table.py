@@ -207,7 +207,6 @@ class Table(BaseModel, PulumiResource, TerraformResource):
                 grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
             ).core_resources
 
-            depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
         if self.individual_grants:
             for g in self.individual_grants:
                 for idx, g in enumerate(self.individual_grants):
