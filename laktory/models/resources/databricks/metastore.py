@@ -118,7 +118,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     @model_validator(mode="before")
     @classmethod
     def grants_validator(cls, data: Any) -> Any:
-        print('doing grants_validator')
+        print(cls, data, 'doing grants_validator')
         grants = data.get("grants", None)
         individual_grants = data.get("individual_grants", None)
         if grants and individual_grants:
