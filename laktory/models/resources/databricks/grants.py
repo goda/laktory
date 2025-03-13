@@ -111,7 +111,7 @@ class Grants(BaseModel, PulumiResource, TerraformResource):
         return self.pulumi_excludes
     
 
-class GrantsIndividual(BaseModel, PulumiResource, TerraformResource):
+class GrantsIndividual(Grant, PulumiResource, TerraformResource):
     """
     Databricks Individual Grants
 
@@ -119,8 +119,6 @@ class GrantsIndividual(BaseModel, PulumiResource, TerraformResource):
 
     Attributes
     ----------
-    grants:
-        List of grant assigned to the selected object
     catalog:
         Name of the catalog to assign the grants to
     external_location:
@@ -129,6 +127,10 @@ class GrantsIndividual(BaseModel, PulumiResource, TerraformResource):
         Name of the metastore to assign the grants to
     model
         Name of the user to assign the permission to.
+    principal:
+        User, group or service principal name
+    privileges:
+        List of allowed privileges        
     schema:
         Name of the schema to assign the permission to.
     share:
@@ -152,11 +154,12 @@ class GrantsIndividual(BaseModel, PulumiResource, TerraformResource):
     ```
     """
 
-    grants: list[Grant]
     catalog: str = None
     external_location: str = None
     metastore: str = None
     model: str = None
+    principal: str
+    privileges: list[str]
     schema_: str = Field(
         None, validation_alias=AliasChoices("schema", "schema_")
     )  # required not to overwrite BaseModel attribute
