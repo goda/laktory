@@ -1,6 +1,6 @@
-from typing import Union
+from typing import Any, Union
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.metastoregrant import MetastoreGrant
@@ -101,8 +101,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     delta_sharing_scope: str = None
     force_destroy: bool = None
     global_metastore_id: str = None
-    grant: MetastoreGrant = None
     grants: list[MetastoreGrant] = None
+    individual_grants: list[MetastoreGrant] = None
     grants_provider: str = None
     lookup_existing: MetastoreLookup = Field(None, exclude=True)
     metastore_id: str = None
@@ -115,6 +115,16 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     updated_by: str = None
     workspace_assignments: list[MetastoreAssignment] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def grants_validator(cls, data: Any) -> Any:
+        print('doing grants_validator')
+        grants = data.get("grants", None)
+        individual_grants = data.get("individual_grants", None)
+        if grants and individual_grants:
+            raise ValueError("Both `grants` and `individual_grants` cannot be set at the same time.")
+        return data
+    
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
