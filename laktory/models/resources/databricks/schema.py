@@ -1,4 +1,3 @@
-import re
 from typing import Union
 
 from pydantic import model_validator
@@ -131,15 +130,13 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
             ).core_resources
 
         if self.individual_grants:
-            for g in self.individual_grants:
-                for idx, g in enumerate(self.individual_grants):
-                    principal = str(idx) if re.match(r"\$\{resources\.(.*?)\}", g.principal) else g.principal
-                    resources += GrantsIndividual(
-                        resource_name=f"grant-{self.resource_name}-{principal}",
-                        schema=f"${{resources.{self.resource_name}.id}}",
-                        principal=g.principal,
-                        privileges=g.privileges,
-                    ).core_resources
+            for idx, g in enumerate(self.individual_grants):
+                resources += GrantsIndividual(
+                    resource_name=f"grant-{self.resource_name}-{idx}",
+                    schema=f"${{resources.{self.resource_name}.id}}",
+                    principal=g.principal,
+                    privileges=g.privileges,
+                ).core_resources
 
         if self.volumes:
             for v in self.volumes:

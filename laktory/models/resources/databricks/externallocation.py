@@ -1,4 +1,3 @@
-import re
 from typing import Union
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.externallocationgrant import ExternalLocationGrant
@@ -103,17 +102,15 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
         if self.grants:
             resources += Grants(
                 resource_name=f"grants-{self.resource_name}",
-                storage_credential=f"${{resources.{self.resource_name}.name}}",
+                external_location=f"${{resources.{self.resource_name}.name}}",
                 grants=[{"principal": g.principal, "privileges": g.privileges} for g in self.grants]
             ).core_resources
 
         if self.individual_grants:
-            for g in self.individual_grants:
-                for idx, g in enumerate(self.individual_grants):
-                    principal = str(idx) if re.match(r"\$\{resources\.(.*?)\}", g.principal) else g.principal
-                    resources += GrantsIndividual(
-                        resource_name=f"grant-{self.resource_name}-{principal}",
-                        storage_credential=f"${{resources.{self.resource_name}.name}}",
+            for idx, g in enumerate(self.individual_grants):
+                resources += GrantsIndividual(
+                        resource_name=f"grant-{self.resource_name}-{idx}",
+                        external_location=f"${{resources.{self.resource_name}.name}}",
                         principal=g.principal,
                         privileges=g.privileges,
                     ).core_resources  
@@ -175,15 +172,13 @@ class ExternalLocation(BaseModel, PulumiResource, TerraformResource):
             ).core_resources
 
         if self.individual_grants:
-            for g in self.individual_grants:
-                for idx, g in enumerate(self.individual_grants):
-                    principal = str(idx) if re.match(r"\$\{resources\.(.*?)\}", g.principal) else g.principal
-                    resources += GrantsIndividual(
-                        resource_name=f"grant-{self.resource_name}-{principal}",
-                        external_location=f"${{resources.{self.resource_name}.name}}",
-                        principal=g.principal,
-                        privileges=g.privileges,
-                    ).core_resources
+            for idx, g in enumerate(self.individual_grants):
+                resources += GrantsIndividual(
+                    resource_name=f"grant-{self.resource_name}-{idx}",
+                    external_location=f"${{resources.{self.resource_name}.name}}",
+                    principal=g.principal,
+                    privileges=g.privileges,
+                ).core_resources
 
         return resources
 
