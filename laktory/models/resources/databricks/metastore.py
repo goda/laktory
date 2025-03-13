@@ -5,7 +5,7 @@ from pydantic import Field, model_validator
 from laktory.models.basemodel import BaseModel
 from laktory.models.grants.metastoregrant import MetastoreGrant
 from laktory.models.resources.baseresource import ResourceLookup
-from laktory.models.resources.databricks.grants import Grants
+from laktory.models.resources.databricks.grants import Grants, GrantsIndividual
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.resources.pulumiresource import PulumiResource
@@ -145,25 +145,29 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                 depends_on += [f"${{resources.{a.resource_name}}}"]
                 resources += [a]
 
-        if self.grants or self.grant:
+        if self.grants:
             options = {"provider": self.grants_provider}
             if depends_on:
                 options["depends_on"] = depends_on
-            if self.grants:
-                grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
-            elif self.grant:
-                grant_config = {"principal": self.grant.principal, "privileges": self.grant.privileges}
-            else:
-                grant_config = {}
+            grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
 
             resources += Grants(
-                resource_name=f"{'grants' if self.grants else 'grant'}-{self.resource_name}",
+                resource_name=f"grants-{self.resource_name}",
                 metastore=f"${{resources.{self.resource_name}.id}}",
                 options=options,
                 **grant_config
             ).core_resources
 
             depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
+        if self.individual_grants:
+            for g in self.individual_grants:
+                resources += GrantsIndividual(
+                    resource_name=f"grant-{self.resource_name}-{g.principal}",
+                    metastore=f"${{resources.{self.resource_name}.id}}",
+                    principal=g.principal,
+                    privileges=g.privileges,
+                    options={"provider": self.grants_provider, "depends_on": depends_on},
+                ).core_resources
 
         if self.data_accesses:
             for data_access in self.data_accesses:
@@ -190,8 +194,8 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
             "workspace_assignments",
-            "grant",
             "grants",
+            "individual_grants",
             "grants_provider",
             "data_accesses",
         ]
