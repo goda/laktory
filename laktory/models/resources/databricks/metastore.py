@@ -1,3 +1,4 @@
+import re
 from typing import Any, Union
 
 from pydantic import Field, model_validator
@@ -162,13 +163,15 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
             depends_on += [f"${{resources.{resources[-1].resource_name}}}"]
         if self.individual_grants:
             for g in self.individual_grants:
-                resources += GrantsIndividual(
-                    resource_name=f"grant-{self.resource_name}-{g.principal}",
-                    metastore=f"${{resources.{self.resource_name}.id}}",
-                    principal=g.principal,
-                    privileges=g.privileges,
-                    options=options,
-                ).core_resources
+                for idx, g in enumerate(self.individual_grants):
+                    principal = str(idx) if re.match(r"\$\{resources\.(.*?)\}", g.principal) else g.principal
+                    resources += GrantsIndividual(
+                        resource_name=f"grant-{self.resource_name}-{principal}",
+                        metastore=f"${{resources.{self.resource_name}.id}}",
+                        principal=g.principal,
+                        privileges=g.privileges,
+                        options=options,
+                    ).core_resources
 
         if self.data_accesses:
             for data_access in self.data_accesses:
