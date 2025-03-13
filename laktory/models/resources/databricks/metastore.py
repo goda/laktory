@@ -128,9 +128,9 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
     @model_validator(mode="before")
     def grants_validator(self) -> Any:
         print(self, 'doing grants_validator')
-        # grants = data.get("grants", None)
-        # individual_grants = data.get("individual_grants", None)
-        if self.grants and self.individual_grants:
+        grants = self.get("grants", None)
+        individual_grants = self.get("individual_grants", None)
+        if grants and individual_grants:
             raise ValueError("Both `grants` and `individual_grants` cannot be set at the same time.")
         return self
     # ----------------------------------------------------------------------- #
