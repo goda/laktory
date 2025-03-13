@@ -209,7 +209,7 @@ class MetastoreDataAccess(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["grant", "grants"]
+        return ["grants", "individual_grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

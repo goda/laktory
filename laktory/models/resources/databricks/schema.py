@@ -161,7 +161,7 @@ class Schema(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["tables", "volumes", "grant", "grants"]
+        return ["tables", "volumes", "grants", "individual_grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

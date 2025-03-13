@@ -230,8 +230,8 @@ class Table(BaseModel, PulumiResource, TerraformResource):
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
         return [
-            "grant",
             "grants",
+            "individual_grants",
         ]
 
     # ----------------------------------------------------------------------- #

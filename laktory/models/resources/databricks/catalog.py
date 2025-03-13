@@ -184,7 +184,7 @@ class Catalog(BaseModel, PulumiResource, TerraformResource):
 
     @property
     def pulumi_excludes(self) -> Union[list[str], dict[str, bool]]:
-        return ["schemas", "is_unity", "grant", "grants"]
+        return ["schemas", "is_unity", "grants", "individual_grants"]
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
