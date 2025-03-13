@@ -145,10 +145,11 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                 depends_on += [f"${{resources.{a.resource_name}}}"]
                 resources += [a]
 
+        options = {"provider": self.grants_provider}
+        if depends_on:
+            options["depends_on"] = depends_on
+
         if self.grants:
-            options = {"provider": self.grants_provider}
-            if depends_on:
-                options["depends_on"] = depends_on
             grant_config = {"grants": [{"principal": g.principal, "privileges": g.privileges} for g in self.grants]}
 
             resources += Grants(
@@ -166,7 +167,7 @@ class Metastore(BaseModel, PulumiResource, TerraformResource):
                     metastore=f"${{resources.{self.resource_name}.id}}",
                     principal=g.principal,
                     privileges=g.privileges,
-                    options={"provider": self.grants_provider, "depends_on": depends_on},
+                    options=options,
                 ).core_resources
 
         if self.data_accesses:
